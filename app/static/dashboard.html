@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI System Monitor | Real-Time Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .pulse-live {
+            animation: pulse-fast 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="h-9 w-9 rounded-lg bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center font-bold text-slate-950 text-lg shadow-lg shadow-indigo-500/20">
+                    AI
+                </div>
+                <div>
+                    <h1 class="text-base font-semibold leading-none tracking-tight">AI System Monitor</h1>
+                    <p class="text-xs text-slate-400 mt-1">Real-Time Performance Engine</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="ws-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 pulse-live"></span>
+                    <span id="ws-status">Connecting...</span>
+                </div>
+                <a href="/docs" target="_blank" class="text-xs text-slate-400 hover:text-slate-200 transition-colors px-3 py-1.5 rounded-md border border-slate-800 hover:border-slate-700 bg-slate-900">
+                    Swagger API Docs
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <!-- Host System Specs Banner -->
+        <div id="system-banner" class="rounded-xl border border-slate-800 bg-slate-900/40 p-4 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-300">
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-500">Host:</span>
+                <span id="host-name" class="font-medium text-slate-200">Loading...</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-500">OS:</span>
+                <span id="host-os" class="font-medium text-slate-200">Loading...</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-500">CPU:</span>
+                <span id="host-cpu" class="font-medium text-slate-200">Loading...</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-500">Cores:</span>
+                <span id="host-cores" class="font-medium text-slate-200">-</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-500">System Uptime:</span>
+                <span id="host-uptime" class="font-medium text-slate-200">0s</span>
+            </div>
+        </div>
+
+        <!-- Primary Hardware Cards (4 Grid) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- CPU Card -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-400">CPU Load</span>
+                    <span id="cpu-freq" class="text-xs text-slate-400">- MHz</span>
+                </div>
+                <div class="mt-3 flex items-baseline space-x-2">
+                    <span id="cpu-percent" class="text-3xl font-bold tracking-tight text-white">0.0%</span>
+                </div>
+                <div class="mt-4 w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="cpu-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="mt-3 text-xs text-slate-400 flex justify-between">
+                    <span>Logical Cores</span>
+                    <span id="cpu-logical-count" class="font-medium text-slate-200">-</span>
+                </div>
+            </div>
+
+            <!-- Memory Card -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-400">RAM Usage</span>
+                    <span id="ram-used" class="text-xs text-slate-400">- GB</span>
+                </div>
+                <div class="mt-3 flex items-baseline space-x-2">
+                    <span id="ram-percent" class="text-3xl font-bold tracking-tight text-white">0.0%</span>
+                </div>
+                <div class="mt-4 w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="ram-bar" class="bg-cyan-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="mt-3 text-xs text-slate-400 flex justify-between">
+                    <span>Total RAM</span>
+                    <span id="ram-total" class="font-medium text-slate-200">- GB</span>
+                </div>
+            </div>
+
+            <!-- Disk Card -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-400">Disk Storage</span>
+                    <span id="disk-mount" class="text-xs text-slate-400">C:\</span>
+                </div>
+                <div class="mt-3 flex items-baseline space-x-2">
+                    <span id="disk-percent" class="text-3xl font-bold tracking-tight text-white">0.0%</span>
+                </div>
+                <div class="mt-4 w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="disk-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="mt-3 text-xs text-slate-400 flex justify-between">
+                    <span>Free Space</span>
+                    <span id="disk-free" class="font-medium text-slate-200">- GB</span>
+                </div>
+            </div>
+
+            <!-- Network Card -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase tracking-wider text-slate-400">Network Speeds</span>
+                    <span class="text-xs text-emerald-400 font-mono">Live</span>
+                </div>
+                <div class="mt-3 space-y-1">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs text-slate-400">Upload:</span>
+                        <span id="net-up" class="text-base font-semibold text-white font-mono">0.0 KB/s</span>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs text-slate-400">Download:</span>
+                        <span id="net-down" class="text-base font-semibold text-white font-mono">0.0 KB/s</span>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-800/80 text-xs text-slate-400 flex justify-between">
+                    <span>Total Sent/Recv</span>
+                    <span id="net-totals" class="font-medium text-slate-300">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-Time Charts & Per-Core Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Real-Time Metrics Line Chart (2 Cols) -->
+            <div class="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/70 p-5 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-slate-200">Real-Time Utilization Trends (Last 30s)</h2>
+                    <span class="text-xs text-slate-500">Updated via WebSocket (~1s)</span>
+                </div>
+                <div class="h-64">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Per-Core CPU Utilization Grid (1 Col) -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900/70 p-5 shadow-sm flex flex-col">
+                <h2 class="text-sm font-semibold text-slate-200 mb-4">CPU Per-Core Utilization</h2>
+                <div id="per-core-container" class="space-y-3 overflow-y-auto max-h-64 flex-1 pr-1">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Active Processes Table -->
+        <div class="rounded-xl border border-slate-800 bg-slate-900/70 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-200">Active Processes</h2>
+                    <p class="text-xs text-slate-400">Live process table sorted by resource utilization</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="sort-cpu-btn" class="px-2.5 py-1 text-xs rounded-md bg-indigo-600 text-white font-medium hover:bg-indigo-500">Top CPU</button>
+                    <button id="sort-mem-btn" class="px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700">Top RAM</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400">
+                            <th class="py-2 px-3 font-medium">PID</th>
+                            <th class="py-2 px-3 font-medium">Process Name</th>
+                            <th class="py-2 px-3 font-medium">CPU %</th>
+                            <th class="py-2 px-3 font-medium">RAM %</th>
+                            <th class="py-2 px-3 font-medium">Memory (RSS)</th>
+                            <th class="py-2 px-3 font-medium">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="process-table-body" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+                        <tr><td colspan="6" class="py-4 text-center text-slate-500">Loading process table...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-600">
+        AI-Powered Real-Time System Monitoring & Predictive Analytics Platform &bull; Day 1 Engine Live
+    </footer>
+
+    <script>
+        // Utilities
+        function formatBytes(bytes, decimals = 1) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // Initialize Chart.js
+        const maxDataPoints = 30;
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        const metricsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(maxDataPoints).fill(''),
+                datasets: [
+                    {
+                        label: 'CPU %',
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        data: Array(maxDataPoints).fill(0),
+                        fill: true,
+                    },
+                    {
+                        label: 'RAM %',
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        data: Array(maxDataPoints).fill(0),
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748b', callback: val => val + '%' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#94a3b8', boxWidth: 12 }
+                    }
+                }
+            }
+        });
+
+        // Load Static Host Info
+        async function fetchSystemInfo() {
+            try {
+                const res = await fetch('/api/system/info');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('host-name').innerText = data.hostname;
+                    document.getElementById('host-os').innerText = `${data.os_name} ${data.os_version} (${data.architecture})`;
+                    document.getElementById('host-cpu').innerText = data.cpu_model || 'Standard CPU';
+                    document.getElementById('host-cores').innerText = `${data.physical_cores || '-'} P / ${data.logical_cores} L`;
+                    document.getElementById('cpu-logical-count').innerText = data.logical_cores;
+                    const hours = Math.floor(data.uptime_seconds / 3600);
+                    const mins = Math.floor((data.uptime_seconds % 3600) / 60);
+                    document.getElementById('host-uptime').innerText = `${hours}h ${mins}m`;
+                }
+            } catch (err) {
+                console.warn('Failed to load system specifications', err);
+            }
+        }
+        fetchSystemInfo();
+
+        // Process Table
+        let currentSort = 'cpu';
+        async function fetchProcesses() {
+            try {
+                const res = await fetch(`/api/processes?limit=8&sort_by=${currentSort}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const tbody = document.getElementById('process-table-body');
+                    tbody.innerHTML = '';
+                    data.processes.forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-800/40 transition-colors';
+                        tr.innerHTML = `
+                            <td class="py-2 px-3 text-slate-400">${p.pid}</td>
+                            <td class="py-2 px-3 font-medium text-slate-200">${p.name}</td>
+                            <td class="py-2 px-3 ${p.cpu_percent > 10 ? 'text-amber-400 font-semibold' : ''}">${p.cpu_percent.toFixed(1)}%</td>
+                            <td class="py-2 px-3">${p.memory_percent.toFixed(1)}%</td>
+                            <td class="py-2 px-3 text-slate-400">${formatBytes(p.memory_rss_bytes)}</td>
+                            <td class="py-2 px-3"><span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">${p.status}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (e) {
+                console.warn('Process fetch failed', e);
+            }
+        }
+        fetchProcesses();
+        setInterval(fetchProcesses, 4000);
+
+        document.getElementById('sort-cpu-btn').addEventListener('click', () => {
+            currentSort = 'cpu';
+            document.getElementById('sort-cpu-btn').className = 'px-2.5 py-1 text-xs rounded-md bg-indigo-600 text-white font-medium hover:bg-indigo-500';
+            document.getElementById('sort-mem-btn').className = 'px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700';
+            fetchProcesses();
+        });
+
+        document.getElementById('sort-mem-btn').addEventListener('click', () => {
+            currentSort = 'memory';
+            document.getElementById('sort-mem-btn').className = 'px-2.5 py-1 text-xs rounded-md bg-indigo-600 text-white font-medium hover:bg-indigo-500';
+            document.getElementById('sort-cpu-btn').className = 'px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-300 font-medium hover:bg-slate-700';
+            fetchProcesses();
+        });
+
+        // WebSocket Real-Time Telemetry Stream
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/metrics`;
+            const ws = new WebSocket(wsUrl);
+
+            const statusEl = document.getElementById('ws-status');
+            const badgeEl = document.getElementById('ws-badge');
+
+            ws.onopen = () => {
+                statusEl.innerText = 'Connected (1s stream)';
+                badgeEl.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const snap = JSON.parse(event.data);
+
+                    // Update CPU
+                    const cpuVal = snap.cpu.utilization_percent;
+                    document.getElementById('cpu-percent').innerText = `${cpuVal.toFixed(1)}%`;
+                    document.getElementById('cpu-bar').style.width = `${Math.min(100, Math.max(0, cpuVal))}%`;
+                    if (snap.cpu.frequency && snap.cpu.frequency.current) {
+                        document.getElementById('cpu-freq').innerText = `${snap.cpu.frequency.current.toFixed(0)} MHz`;
+                    }
+
+                    // Update RAM
+                    const ramVal = snap.memory.utilization_percent;
+                    document.getElementById('ram-percent').innerText = `${ramVal.toFixed(1)}%`;
+                    document.getElementById('ram-bar').style.width = `${Math.min(100, Math.max(0, ramVal))}%`;
+                    document.getElementById('ram-used').innerText = `${(snap.memory.used_bytes / (1024**3)).toFixed(2)} GB`;
+                    document.getElementById('ram-total').innerText = `${(snap.memory.total_bytes / (1024**3)).toFixed(2)} GB`;
+
+                    // Update Disk
+                    const diskVal = snap.disk.utilization_percent;
+                    document.getElementById('disk-percent').innerText = `${diskVal.toFixed(1)}%`;
+                    document.getElementById('disk-bar').style.width = `${Math.min(100, Math.max(0, diskVal))}%`;
+                    document.getElementById('disk-mount').innerText = snap.disk.mount_point;
+                    document.getElementById('disk-free').innerText = `${(snap.disk.available_bytes / (1024**3)).toFixed(1)} GB`;
+
+                    // Update Network
+                    document.getElementById('net-up').innerText = `${formatBytes(snap.network.upload_speed_bps)}/s`;
+                    document.getElementById('net-down').innerText = `${formatBytes(snap.network.download_speed_bps)}/s`;
+                    document.getElementById('net-totals').innerText = `▲ ${formatBytes(snap.network.bytes_sent)} | ▼ ${formatBytes(snap.network.bytes_recv)}`;
+
+                    // Update Chart
+                    metricsChart.data.datasets[0].data.shift();
+                    metricsChart.data.datasets[0].data.push(cpuVal);
+                    metricsChart.data.datasets[1].data.shift();
+                    metricsChart.data.datasets[1].data.push(ramVal);
+                    metricsChart.update('none');
+
+                    // Per Core Bars
+                    const coreContainer = document.getElementById('per-core-container');
+                    if (snap.cpu.per_core_utilization && snap.cpu.per_core_utilization.length > 0) {
+                        if (coreContainer.children.length !== snap.cpu.per_core_utilization.length) {
+                            coreContainer.innerHTML = '';
+                            snap.cpu.per_core_utilization.forEach((val, idx) => {
+                                const div = document.createElement('div');
+                                div.innerHTML = `
+                                    <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                        <span>Core ${idx}</span>
+                                        <span id="core-val-${idx}">${val.toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                        <div id="core-bar-${idx}" class="bg-indigo-400 h-1.5 rounded-full transition-all duration-300" style="width: ${val}%"></div>
+                                    </div>
+                                `;
+                                coreContainer.appendChild(div);
+                            });
+                        } else {
+                            snap.cpu.per_core_utilization.forEach((val, idx) => {
+                                const valEl = document.getElementById(`core-val-${idx}`);
+                                const barEl = document.getElementById(`core-bar-${idx}`);
+                                if (valEl) valEl.innerText = `${val.toFixed(1)}%`;
+                                if (barEl) barEl.style.width = `${val}%`;
+                            });
+                        }
+                    }
+
+                } catch (e) {
+                    console.error('Error handling WebSocket message', e);
+                }
+            };
+
+            ws.onclose = () => {
+                statusEl.innerText = 'Disconnected. Reconnecting...';
+                badgeEl.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20';
+                setTimeout(connectWebSocket, 2000);
+            };
+
+            ws.onerror = () => {
+                ws.close();
+            };
+        }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
+
