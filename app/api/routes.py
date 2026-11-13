@@ -6,6 +6,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 
+from app.schemas.analytics import (
+    AnomalyDetectionResponse,
+    PredictiveRiskResponse,
+    PredictionResponse,
+    PredictionSummary,
+)
 from app.schemas.metrics import (
     HealthResponse,
     HistoricalMetricsResponse,
@@ -65,6 +71,96 @@ async def get_system_info(
 ) -> SystemInfo:
     """Retrieve host machine platform, CPU cores, memory size, and boot time."""
     return service.get_system_info()
+
+
+# ============================================================================
+# Day 2: Predictive Analytics & Anomaly Detection Endpoints
+# ============================================================================
+
+
+@router.get(
+    "/predictions/cpu",
+    response_model=PredictionResponse,
+    tags=["Predictive Analytics"],
+    summary="CPU utilization forecast",
+)
+async def predict_cpu_utilization(
+    horizons: Optional[str] = Query(
+        default=None,
+        description="Comma-separated future prediction intervals in seconds (e.g. '60,300,900')",
+    ),
+    service: MonitoringService = Depends(get_monitoring_service),
+) -> PredictionResponse:
+    """Forecast future short-term CPU utilization using Random Forest trained on real historical metrics."""
+    parsed_horizons = None
+    if horizons:
+        try:
+            parsed_horizons = [int(h.strip()) for h in horizons.split(",") if h.strip()]
+        except ValueError:
+            parsed_horizons = None
+    return service.get_cpu_prediction(horizons_seconds=parsed_horizons)
+
+
+@router.get(
+    "/predictions/memory",
+    response_model=PredictionResponse,
+    tags=["Predictive Analytics"],
+    summary="RAM utilization forecast",
+)
+async def predict_memory_utilization(
+    horizons: Optional[str] = Query(
+        default=None,
+        description="Comma-separated future prediction intervals in seconds (e.g. '60,300,900')",
+    ),
+    service: MonitoringService = Depends(get_monitoring_service),
+) -> PredictionResponse:
+    """Forecast future short-term Memory utilization using Random Forest trained on real historical metrics."""
+    parsed_horizons = None
+    if horizons:
+        try:
+            parsed_horizons = [int(h.strip()) for h in horizons.split(",") if h.strip()]
+        except ValueError:
+            parsed_horizons = None
+    return service.get_memory_prediction(horizons_seconds=parsed_horizons)
+
+
+@router.get(
+    "/predictions/summary",
+    response_model=PredictionSummary,
+    tags=["Predictive Analytics"],
+    summary="Executive resource forecast summary",
+)
+async def get_predictions_summary(
+    service: MonitoringService = Depends(get_monitoring_service),
+) -> PredictionSummary:
+    """Aggregated predictive resource forecast covering CPU and Memory."""
+    return service.get_prediction_summary()
+
+
+@router.get(
+    "/anomalies",
+    response_model=AnomalyDetectionResponse,
+    tags=["Anomaly Detection"],
+    summary="System anomaly detection",
+)
+async def get_anomalies(
+    service: MonitoringService = Depends(get_monitoring_service),
+) -> AnomalyDetectionResponse:
+    """Detect current anomalies using rule-based threshold filters and scikit-learn Isolation Forest."""
+    return service.get_anomalies()
+
+
+@router.get(
+    "/risk",
+    response_model=PredictiveRiskResponse,
+    tags=["Risk Assessment"],
+    summary="Holistic predictive risk status",
+)
+async def get_system_risk(
+    service: MonitoringService = Depends(get_monitoring_service),
+) -> PredictiveRiskResponse:
+    """Evaluate comprehensive operational risk from current metrics, trends, forecasts, and anomalies."""
+    return service.get_risk_assessment()
 
 
 @ws_router.websocket("/ws/metrics")

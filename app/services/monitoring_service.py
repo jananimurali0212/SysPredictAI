@@ -10,6 +10,16 @@ from app.collectors.process_collector import ProcessCollector
 from app.collectors.system_collector import SystemCollector
 from app.config import settings
 from app.database.db import Database, get_db
+from app.ml.anomaly_detector import AnomalyDetector
+from app.ml.data_processor import DataProcessor
+from app.ml.forecaster import ResourceForecaster
+from app.ml.risk_analyzer import RiskAnalyzer
+from app.schemas.analytics import (
+    AnomalyDetectionResponse,
+    PredictiveRiskResponse,
+    PredictionResponse,
+    PredictionSummary,
+)
 from app.schemas.metrics import (
     HealthResponse,
     HistoricalMetricsResponse,
@@ -31,11 +41,25 @@ class MonitoringService:
         process_collector: Optional[ProcessCollector] = None,
         database: Optional[Database] = None,
         connection_manager: Optional[ConnectionManager] = None,
+        data_processor: Optional[DataProcessor] = None,
+        forecaster: Optional[ResourceForecaster] = None,
+        anomaly_detector: Optional[AnomalyDetector] = None,
+        risk_analyzer: Optional[RiskAnalyzer] = None,
     ):
         self.system_collector = system_collector or SystemCollector()
         self.process_collector = process_collector or ProcessCollector()
         self.db = database or get_db()
         self.ws_manager = connection_manager or get_connection_manager()
+
+        # ML & Predictive Analytics Services
+        self.data_processor = data_processor or DataProcessor(database=self.db)
+        self.forecaster = forecaster or ResourceForecaster(data_processor=self.data_processor)
+        self.anomaly_detector = anomaly_detector or AnomalyDetector(data_processor=self.data_processor)
+        self.risk_analyzer = risk_analyzer or RiskAnalyzer(
+            data_processor=self.data_processor,
+            forecaster=self.forecaster,
+            anomaly_detector=self.anomaly_detector,
+        )
 
         self._start_time: float = time.time()
         self._latest_snapshot: Optional[SystemMetricsSnapshot] = None
@@ -196,6 +220,33 @@ class MonitoringService:
             collectors_healthy=collectors_healthy,
             database_healthy=db_healthy,
         )
+
+    def get_cpu_prediction(self, horizons_seconds: Optional[list] = None) -> PredictionResponse:
+        """Fetch historical records from DB and generate short-term CPU utilization forecast."""
+        df = self.db.get_history_df(limit=2000)
+        return self.forecaster.forecast_metric(df, metric="cpu", horizons_seconds=horizons_seconds)
+
+    def get_memory_prediction(self, horizons_seconds: Optional[list] = None) -> PredictionResponse:
+        """Fetch historical records from DB and generate short-term RAM utilization forecast."""
+        df = self.db.get_history_df(limit=2000)
+        return self.forecaster.forecast_metric(df, metric="memory", horizons_seconds=horizons_seconds)
+
+    def get_prediction_summary(self) -> PredictionSummary:
+        """Synthesize CPU and Memory forecasts into an executive prediction summary."""
+        df = self.db.get_history_df(limit=2000)
+        return self.forecaster.forecast_summary(df)
+
+    def get_anomalies(self) -> AnomalyDetectionResponse:
+        """Detect current system anomalies using rule thresholds and Isolation Forest."""
+        current_snapshot = self.get_current_metrics()
+        df = self.db.get_history_df(limit=500)
+        return self.anomaly_detector.detect_all(current_snapshot, historical_df=df)
+
+    def get_risk_assessment(self) -> PredictiveRiskResponse:
+        """Evaluate multi-factor operational risk across current metrics, trends, forecasts, and anomalies."""
+        current_snapshot = self.get_current_metrics()
+        df = self.db.get_history_df(limit=500)
+        return self.risk_analyzer.evaluate_risk(current_snapshot, historical_df=df)
 
 
 _service_instance: Optional[MonitoringService] = None

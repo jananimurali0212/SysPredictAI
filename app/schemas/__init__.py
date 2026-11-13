@@ -12,6 +12,17 @@ from .metrics import (
     HealthResponse,
     HistoricalMetricsResponse,
 )
+from .analytics import (
+    ForecastPoint,
+    ModelEvaluation,
+    ModelMetadata,
+    PredictionResponse,
+    PredictionSummary,
+    AnomalyItem,
+    AnomalyDetectionResponse,
+    RiskBreakdown,
+    PredictiveRiskResponse,
+)
 
 __all__ = [
     "CPUFrequency",
@@ -25,5 +36,14 @@ __all__ = [
     "SystemInfo",
     "HealthResponse",
     "HistoricalMetricsResponse",
+    "ForecastPoint",
+    "ModelEvaluation",
+    "ModelMetadata",
+    "PredictionResponse",
+    "PredictionSummary",
+    "AnomalyItem",
+    "AnomalyDetectionResponse",
+    "RiskBreakdown",
+    "PredictiveRiskResponse",
 ]
 

@@ -89,6 +89,11 @@ async def root(request: Request):
                 "processes": "/api/processes",
                 "system_info": "/api/system/info",
                 "websocket_stream": "/ws/metrics",
+                "predict_cpu": "/api/predictions/cpu",
+                "predict_memory": "/api/predictions/memory",
+                "predict_summary": "/api/predictions/summary",
+                "anomalies": "/api/anomalies",
+                "risk": "/api/risk",
             },
         }
     )

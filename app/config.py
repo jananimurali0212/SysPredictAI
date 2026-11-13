@@ -28,6 +28,22 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
 
+    # Machine Learning & Analytics Settings
+    MODEL_DIR: str = str(Path(__file__).resolve().parent.parent / "saved_models")
+    ML_MIN_TRAINING_SAMPLES: int = 30
+    DEFAULT_FORECAST_HORIZON_SECONDS: int = 60
+    
+    # Anomaly Detection Thresholds (Configurable)
+    ANOMALY_CPU_WARNING: float = 75.0
+    ANOMALY_CPU_CRITICAL: float = 90.0
+    ANOMALY_MEMORY_WARNING: float = 80.0
+    ANOMALY_MEMORY_CRITICAL: float = 92.0
+    ANOMALY_DISK_WARNING: float = 85.0
+    ANOMALY_DISK_CRITICAL: float = 95.0
+    ANOMALY_NET_SPEED_SPIKE_BPS: float = 50_000_000.0  # 50 MB/s
+    ISOLATION_FOREST_CONTAMINATION: float = 0.05
+    ISOLATION_FOREST_MIN_SAMPLES: int = 40
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
