@@ -7,11 +7,12 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white" alt="Python Version" />
   <img src="https://img.shields.io/badge/FastAPI-0.110%2B-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white" alt="Gemini AI" />
   <img src="https://img.shields.io/badge/Machine%20Learning-Scikit--Learn-F7931E?logo=scikit-learn&logoColor=white" alt="Scikit-Learn" />
-  <img src="https://img.shields.io/badge/Data%20Processing-Pandas-150458?logo=pandas&logoColor=white" alt="Pandas" />
-  <img src="https://img.shields.io/badge/Storage-SQLite%20WAL-003B57?logo=sqlite&logoColor=white" alt="SQLite WAL" />
-  <img src="https://img.shields.io/badge/Streaming-WebSockets-4B5563?logo=socketdotio&logoColor=white" alt="WebSockets" />
-  <img src="https://img.shields.io/badge/Tests-29%2F29%20Passing-emerald?logo=pytest&logoColor=white" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-35%2F35%20Passing-emerald?logo=pytest&logoColor=white" alt="Tests" />
   <img src="https://img.shields.io/badge/License-MIT-purple" alt="License" />
 </p>
 
@@ -19,7 +20,7 @@
 
 ## 📌 Overview
 
-**SysPredictAI** is a high-performance local system monitoring and AI predictive analytics platform. It collects granular hardware metrics directly from the host operating system via non-blocking hardware probes, persists time-series history in an embedded SQLite database configured with Write-Ahead Logging (WAL), and features a complete **Machine Learning and Predictive Analytics Engine** that generates time-series feature sets, forecasts CPU and RAM utilization using **Random Forest Regressors** and baseline models, detects anomalies via rule-based filters and **Isolation Forest**, and computes holistic predictive system risk levels.
+**SysPredictAI** is a high-performance local system monitoring and AI predictive analytics platform. It collects granular hardware metrics directly from the host operating system via non-blocking hardware probes, persists time-series history in an embedded SQLite database configured with Write-Ahead Logging (WAL), forecasts CPU and RAM utilization using **Random Forest Regressors**, detects anomalies via rule-based filters and **Isolation Forest**, provides **Gemini AI diagnostic insights**, and features a modern, responsive **React + Vite + Tailwind CSS dashboard**.
 
 ---
 
@@ -29,23 +30,24 @@
 SysPredictAI/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py                   # FastAPI entry point, lifespan, CORS & structured logging
-│   ├── config.py                 # Pydantic Settings with .env and ML parameters
+│   ├── main.py                   # FastAPI entry point, static frontend mount, CORS & logging
+│   ├── config.py                 # Pydantic Settings with .env, ML & Gemini configurations
 │   ├── collectors/
 │   │   ├── __init__.py
 │   │   ├── system_collector.py   # psutil-based CPU, RAM, Disk & Network collectors
 │   │   └── process_collector.py  # Fault-tolerant OS process table collector
 │   ├── ml/
 │   │   ├── __init__.py
-│   │   ├── data_processor.py     # Historical data retrieval, cleaning & feature engineering
+│   │   ├── data_processor.py     # Historical data extraction, cleaning & feature engineering
 │   │   ├── forecaster.py         # Baseline & Random Forest Regressor resource forecasting
 │   │   ├── anomaly_detector.py   # Rule-based thresholding & Scikit-Learn Isolation Forest
 │   │   └── risk_analyzer.py      # Composite risk engine (Normal, Warning, High Risk, Critical)
 │   ├── api/
 │   │   ├── __init__.py
-│   │   └── routes.py             # REST endpoints (telemetry + ML) & WebSocket handler
+│   │   └── routes.py             # REST endpoints (telemetry, ML, AI) & WebSocket handler
 │   ├── services/
 │   │   ├── __init__.py
+│   │   ├── ai_service.py         # Google Gemini AI & grounded telemetry diagnostic engine
 │   │   └── monitoring_service.py # Telemetry coordinator, worker daemon & ML orchestrator
 │   ├── database/
 │   │   ├── __init__.py
@@ -57,89 +59,81 @@ SysPredictAI/
 │   ├── schemas/
 │   │   ├── __init__.py
 │   │   ├── metrics.py            # Pydantic v2 schemas for telemetry & responses
-│   │   └── analytics.py          # Pydantic v2 schemas for ML forecasts, anomalies & risk
+│   │   ├── analytics.py          # Pydantic v2 schemas for ML forecasts, anomalies & risk
+│   │   └── ai.py                 # Pydantic v2 schemas for Gemini AI queries & summaries
 │   └── static/
-│       └── dashboard.html        # Real-time visual web dashboard
+│       └── dashboard.html        # Fallback static visual dashboard
+├── frontend/                     # Day 3 React + Vite Frontend Application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── common/           # MetricCard, StatusBadge, LoadingState, ErrorAlert
+│   │   │   ├── layout/           # Sidebar, Header, MainLayout
+│   │   │   └── pages/            # 7 Dashboard Pages:
+│   │   │       ├── Overview.jsx          # Executive summary, key metrics, live mini-chart
+│   │   │       ├── LiveMonitoring.jsx    # Real-time WebSocket streaming, Recharts waveforms
+│   │   │       ├── ProcessMonitoring.jsx # Searchable, sortable process table
+│   │   │       ├── Predictions.jsx       # Forecast vs actual, Random Forest MAE/RMSE
+│   │   │       ├── AnomalyDetection.jsx  # Multi-severity alert log & Isolation Forest
+│   │   │       ├── AIInsights.jsx        # Gemini diagnostic Q&A assistant
+│   │   │       └── Settings.jsx          # Cadence, alert threshold sliders, local preferences
+│   │   ├── services/
+│   │   │   ├── api.js            # Centralized backend HTTP client
+│   │   │   └── websocket.js      # Resilient WebSocket client with auto-reconnection
+│   │   ├── App.jsx               # Navigation state switcher
+│   │   ├── index.css             # Tailwind CSS & custom scrollbar styles
+│   │   └── main.jsx              # Application DOM root
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── vite.config.js
+│   └── index.html
 ├── saved_models/                 # Serialized model artifacts (.joblib) & metadata (.json)
 ├── tests/
 │   ├── test_metrics.py           # Unit tests for hardware collectors & SQLite
 │   ├── test_api.py               # Integration tests for core REST endpoints & WebSockets
 │   ├── test_analytics.py         # Unit tests for ML features, forecaster, anomalies & risk
-│   └── test_analytics_api.py     # Integration tests for Day 2 ML REST endpoints
-├── verify_live_server.py         # Day 1 live server end-to-end verification suite
-├── verify_day2_analytics.py      # Day 2 end-to-end verification of all ML endpoints
-├── system_health_audit.py        # Comprehensive live health audit script
-├── requirements.txt              # Project dependencies
-├── pytest.ini                    # Pytest test discovery & pythonpath configuration
+│   ├── test_analytics_api.py     # Integration tests for Day 2 ML REST endpoints
+│   └── test_ai_insights.py       # Integration tests for Day 3 Gemini AI endpoints
+├── verify_live_server.py         # Day 1 live server verification suite
+├── verify_day2_analytics.py      # Day 2 ML & predictions verification suite
+├── verify_day3_frontend.py       # Day 3 end-to-end full platform verification suite
+├── requirements.txt              # Backend Python dependencies
+├── pytest.ini                    # Pytest configuration
 ├── .env.example                  # Environment configuration template
-├── .gitignore                    # Git ignore specifications
-├── LICENSE                       # Project license
-└── README.md                     # Project manual
+└── README.md                     # Project documentation
 ```
 
 ---
 
-## 🤖 Day 2: Machine Learning & Predictive Analytics Engine
+## 🎨 Day 3: Frontend Dashboard & AI Insights
 
-### 1. Historical Data Processing & Feature Engineering (`app/ml/data_processor.py`)
-- **Direct Database Extraction**: Extracts real persisted telemetry into Pandas DataFrames.
-- **Chronological Sorting & Cleaning**: Sorts timestamps chronologically, deduplicates records, and cleans missing values without fabricating artificial metrics.
-- **Engineered Time-Series Features**:
-  - Current CPU (`cpu_percent`) and Memory (`memory_percent`) utilization.
-  - **Lag Features**: Step lags at $t-1$, $t-2$, $t-3$, and $t-5$ to capture momentum.
-  - **Rolling Averages**: 1-minute (`60s`), 5-minute (`300s`), and 15-minute (`900s`) moving averages.
-  - **Rolling Volatility**: 5-minute rolling standard deviation reflecting utilization jitter.
-  - **Recent Utilization Trend**: Delta differentials comparing current utilization against recent baselines.
+### 1. Modern Dark Navy UI
+- Built with **React 18**, **Vite**, **Tailwind CSS**, and **Lucide React** icons.
+- Cohesive dark navy color palette:
+  - Background: Deep Navy (`#0B0F19`)
+  - Cards: Surface Navy (`#111827`)
+  - Accent: Vibrant Blue (`#3B82F6`)
+  - Status Indicators: Normal (`#10B981`), Warning (`#F59E0B`), Critical (`#EF4444`)
+- Fully responsive across desktop, tablet, and mobile layouts.
 
-### 2. Resource Forecasting (`app/ml/forecaster.py`)
-- **Baseline Forecasting**: Moving average and persistence models providing standard reference benchmarks.
-- **Random Forest Regressor**:
-  - Trains dedicated regressors for CPU and Memory using `RandomForestRegressor(n_estimators=50, max_depth=6)`.
-  - **Strict Chronological Splitting**: Chronological 80/20 train/test split preserving temporal integrity (never randomly shuffled).
-  - **Performance Evaluation**: Computes **Mean Absolute Error (MAE)** and **Root Mean Squared Error (RMSE)** for both the trained Random Forest and the baseline model, logging percentage improvements.
-  - **Configurable Future Horizons**: Generates forward-looking projections for short-term intervals (e.g. 60s, 300s, 900s) with confidence bounds.
-  - **Bound Enforcement**: All predictions are clipped to valid limits $[0.0, 100.0]\%$.
-  - **Insufficient Data Protection**: If collected samples fall below the configurable threshold (`ML_MIN_TRAINING_SAMPLES`, default 30), returns status `"insufficient_data"` with a clear message and zero fabricated predictions.
-  - **Model Persistence**: Serializes trained models to `saved_models/{metric}_rf_model.joblib` alongside structured metadata `saved_models/{metric}_metadata.json`.
+### 2. 7 Dedicated Dashboard Pages
+1. **Overview**: Executive status statement, key hardware cards, live mini-chart, recent anomaly feed, and instant AI summary.
+2. **Live Monitoring**: Real-time WebSocket streaming at 1-second cadence, dual area/line charts, per-core CPU load distribution bars, and network upload/download bandwidth.
+3. **Process Monitoring**: Top active processes table with real-time PID, CPU %, RAM %, and RSS memory, instant name/PID search filtering, and sorting toggles.
+4. **Predictions**: Short-term CPU and RAM regression projections (60s, 300s, 900s), historical vs. predicted comparison chart with confidence bands, model evaluation metrics (MAE, RMSE, baseline comparisons), and clear statistical estimate disclaimers.
+5. **Anomaly Detection**: Active anomaly alerts with severity filters (`All`, `Critical`, `High`, `Medium`, `Low`), observed values, baseline references, anomaly scores, and remediation advice.
+6. **AI Insights**: Interactive Gemini AI assistant answering questions like *"Why is my CPU usage high?"*, *"Which process is consuming the most resources?"*, or custom inquiries, with strict separation between directly observed facts, possible causes, and recommended actions.
+7. **Settings**: Configurable polling cadence, interactive alert threshold sliders (CPU/RAM warning & critical), compact table mode, and local storage persistence.
 
-### 3. Anomaly Detection (`app/ml/anomaly_detector.py`)
-- **Dual-Layer Detection Strategy**:
-  1. **Rule-Based Thresholds**: Flags instant breaches and rapid surges:
-     - CPU utilization warning ($\ge 75\%$) and critical ($\ge 90\%$).
-     - Sudden CPU spike ($+35\%$ jump over 10-sample moving average).
-     - Memory utilization warning ($\ge 80\%$) and critical ($\ge 92\%$).
-     - Disk volume capacity warning ($\ge 85\%$) and critical ($\ge 95\%$).
-     - Network transfer burst ($\ge 50\text{ MB/s}$ or configurable threshold).
-  2. **Multivariate Isolation Forest**:
-     - Fits `IsolationForest(contamination=0.05)` across multi-dimensional feature space (`cpu_percent`, `memory_percent`, `disk_percent`, `upload_speed_bps`, `download_speed_bps`) when $\ge 40$ samples exist.
-     - Identifies multivariate outlier patterns with calculated decision scores and isolates the primary deviating metric.
-- **Structured Anomaly Output**:
-  - `anomaly_id`: Unique identifier
-  - `timestamp`: UTC event timestamp
-  - `metric_name`: Hardware component
-  - `observed_value`: Exact numeric measurement
-  - `severity`: `Low`, `Medium`, `High`, or `Critical`
-  - `explanation`: Contextual description
-  - `recommended_action`: Actionable remediation guidance
-
-### 4. Predictive Risk Analysis (`app/ml/risk_analyzer.py`)
-- Holistically evaluates:
-  - Current CPU and RAM utilization.
-  - Short-term trend trajectories (`rising`, `declining`, `stable`).
-  - ML forward-looking forecasted resource pressure.
-  - Count and severities of detected anomalies.
-- **Derived Risk Status**:
-  - `Normal`: Stable operation within baseline limits.
-  - `Warning`: Moderate elevated load or single medium anomaly.
-  - `High Risk`: Approaching operational thresholds or elevated ML forecast.
-  - `Critical`: Saturated hardware, critical threshold breach, or severe active anomalies.
-- Produces a **composite risk score** ($0.0 - 100.0$), component-level status breakdowns, and prioritized recommendations.
+### 3. Gemini AI Diagnostics & Grounding Policy (`app/services/ai_service.py`)
+- **Backend Protected**: The Gemini API key remains securely stored in the backend environment (`GEMINI_API_KEY`). It is never exposed in frontend bundles.
+- **Strict Telemetry Grounding**: The AI model is supplied real hardware metrics, active processes, and anomaly records.
+- **Fail-Safe Telemetry Fallback**: If `GEMINI_API_KEY` is not configured, the platform automatically switches to an intelligent local rule-grounded telemetry reasoning engine so diagnostics always function without interruption.
 
 ---
 
 ## 📡 REST API Reference
 
-### Day 1 Endpoints
+### Core Telemetry (Day 1)
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/health` | Service health status, collector status, and DB state |
@@ -149,166 +143,54 @@ SysPredictAI/
 | `GET` | `/api/system/info` | Host hardware specifications, architecture, and uptime |
 | `WS` | `/ws/metrics` | Real-time WebSocket streaming socket (~1s interval) |
 
-### Day 2 Machine Learning & Predictive Analytics Endpoints
+### Predictive Analytics (Day 2)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/predictions/cpu` | Short-term CPU utilization forecast (60s, 300s, 900s) |
+| `GET` | `/api/predictions/memory` | Short-term RAM utilization forecast (60s, 300s, 900s) |
+| `GET` | `/api/predictions/summary` | Executive synthesized resource forecast |
+| `GET` | `/api/anomalies` | Detected system anomalies from rule filters and Isolation Forest |
+| `GET` | `/api/risk` | Holistic predictive risk assessment (`Normal`, `Warning`, `High Risk`, `Critical`) |
 
-#### 1. CPU Utilization Forecast
-```http
-GET /api/predictions/cpu?horizons=60,300,900
-```
-```json
-{
-  "metric": "cpu",
-  "status": "success",
-  "message": "Resource forecast generated successfully using Random Forest Regressor.",
-  "timestamp": "2026-11-13T10:45:58.939565Z",
-  "current_value": 30.5,
-  "method_used": "random_forest",
-  "predictions": [
-    {
-      "horizon_seconds": 60,
-      "target_timestamp": "2026-11-13T10:46:58.939565Z",
-      "predicted_value": 33.5,
-      "lower_bound": 25.04,
-      "upper_bound": 41.96
-    },
-    {
-      "horizon_seconds": 300,
-      "target_timestamp": "2026-11-13T10:50:58.939565Z",
-      "predicted_value": 32.98,
-      "lower_bound": 24.52,
-      "upper_bound": 41.44
-    }
-  ],
-  "evaluation": {
-    "model_mae": 8.461,
-    "model_rmse": 10.167,
-    "baseline_mae": 2.576,
-    "baseline_rmse": 3.162
-  }
-}
-```
+### Gemini AI Insights (Day 3)
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/insights/query` | Ask Gemini AI performance questions with telemetry grounding |
+| `GET` | `/api/insights/summary` | Automated executive system health statement |
 
-#### 2. RAM Memory Forecast
-```http
-GET /api/predictions/memory?horizons=60,300,900
-```
-*Returns identical structure for memory utilization.*
+---
 
-#### 3. Prediction Summary
-```http
-GET /api/predictions/summary
-```
-```json
-{
-  "timestamp": "2026-11-13T10:45:58.939565Z",
-  "status": "success",
-  "cpu_forecast": { ... },
-  "memory_forecast": { ... },
-  "summary": "CPU forecast: 33.5% utilization expected in 60s. Memory forecast: 90.8% utilization expected in 60s."
-}
-```
+## 🚀 Running the Application
 
-#### 4. Anomaly Detection
-```http
-GET /api/anomalies
+### 1. Start the Backend Server
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-```json
-{
-  "timestamp": "2026-11-13T10:45:37.892014Z",
-  "total_anomalies": 1,
-  "isolation_forest_enabled": true,
-  "anomalies": [
-    {
-      "anomaly_id": "anom_mem_warn_1794566737",
-      "timestamp": "2026-11-13T10:45:37.892014Z",
-      "metric_name": "memory",
-      "observed_value": 90.4,
-      "threshold_or_baseline": 80.0,
-      "anomaly_score": 0.7,
-      "detection_method": "rule_based",
-      "severity": "Medium",
-      "explanation": "RAM utilization (90.4%) exceeded warning threshold (80.0%).",
-      "recommended_action": "Review high memory footprint processes."
-    }
-  ]
-}
-```
+- **Interactive Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **Built-in React Dashboard**: [http://127.0.0.1:8000/dashboard](http://127.0.0.1:8000/dashboard)
 
-#### 5. Predictive Risk Assessment
-```http
-GET /api/risk
+### 2. Start the React Frontend in Development Mode
+```powershell
+cd frontend
+npm run dev
 ```
-```json
-{
-  "timestamp": "2026-11-13T10:45:37.912411Z",
-  "risk_status": "High Risk",
-  "risk_score": 61.8,
-  "current_cpu_percent": 30.8,
-  "current_memory_percent": 90.5,
-  "recent_cpu_trend": "rising",
-  "recent_memory_trend": "stable",
-  "breakdown": {
-    "cpu_status": "Normal",
-    "memory_status": "High Risk",
-    "disk_status": "Normal",
-    "network_status": "Normal",
-    "forecast_risk": "Normal",
-    "trend_description": "CPU climbing (+18.8%), RAM stable"
-  },
-  "active_anomalies_count": 1,
-  "recommendations": [
-    "Memory utilization is high. Free dormant process allocations or add RAM.",
-    "[Medium Anomaly] Review high memory footprint processes."
-  ]
-}
-```
+- **Vite Live Dashboard**: [http://localhost:5173](http://localhost:5173)
 
 ---
 
 ## 🧪 Testing & Verification
 
-The test suite covers historical data extraction, feature generation, Random Forest regression, baseline comparisons, insufficient data safety, anomaly detection, risk classification, and API response validation.
-
-### Run Automated Pytest Suite
+### Run Complete Automated Test Suite (35 Tests)
 ```powershell
 python -m pytest -v
 ```
-*Executes all **29 automated tests** across `tests/test_metrics.py`, `tests/test_api.py`, `tests/test_analytics.py`, and `tests/test_analytics_api.py`.*
+*Executes all **35 automated tests** covering Day 1 telemetry collectors, Day 2 Random Forest and Isolation Forest modules, and Day 3 Gemini AI insights.*
 
-### Run Live Day 2 Verification Script
+### Run Day 3 End-to-End Verification Script
 ```powershell
-python verify_day2_analytics.py
+python verify_day3_frontend.py
 ```
-*Spawns a live FastAPI instance, polls telemetry, validates all 10 REST endpoints and WebSocket streaming, and exercises the ML pipeline with zero mock data.*
-
-### Run Day 1 Verification Suite
-```powershell
-python verify_live_server.py
-```
-
----
-
-## 🗺️ Project Roadmap
-
-- [x] **Day 1 – Foundation & Monitoring Engine**
-  - psutil hardware collectors (CPU, Memory, Disk, Network, Processes)
-  - SQLite persistence with WAL mode & Pandas export
-  - FastAPI REST backend and `/ws/metrics` streaming
-  - Built-in live visual dashboard (`/dashboard`)
-  - 100% test coverage and live audit verification
-- [x] **Day 2 – Machine Learning & Predictive Analytics**
-  - Time-series feature engineering (lags, rolling averages, rolling volatility, trends)
-  - Baseline and Random Forest Regressors for CPU and RAM utilization
-  - Chronological evaluation with MAE, RMSE, and benchmark comparison
-  - Graceful insufficient historical data protection (no fabricated predictions)
-  - Dual-layer anomaly detection (Rule-based heuristics + Scikit-Learn Isolation Forest)
-  - Multi-factor Predictive Risk Analyzer (`Normal`, `Warning`, `High Risk`, `Critical`)
-  - 5 new REST endpoints (`/api/predictions/cpu`, `/api/predictions/memory`, `/api/predictions/summary`, `/api/anomalies`, `/api/risk`)
-  - Complete automated test suite (29/29 passing)
-- [ ] **Day 3 – Advanced Frontend & Visual Analytics**
-  - Interactive multi-horizon forecast charts
-  - Anomaly timeline and alert banner widgets
-  - Live risk gauges and recommendation action items
+*Validates the live backend, Gemini AI queries, React frontend distribution, and WebSocket streaming.*
 
 ---
 

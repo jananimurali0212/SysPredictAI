@@ -1,9 +1,9 @@
 {
   "metadata": {
     "model_type": "RandomForestRegressor",
-    "trained_at": "2026-11-13T10:45:58.939565Z",
-    "training_samples": 19,
-    "test_samples": 5,
+    "trained_at": "2026-11-14T11:03:43.184862Z",
+    "training_samples": 399,
+    "test_samples": 100,
     "features_used": [
       "cpu_percent",
       "memory_percent",
@@ -34,11 +34,11 @@
     }
   },
   "evaluation": {
-    "model_mae": 8.461,
-    "model_rmse": 10.167,
-    "baseline_mae": 2.576,
-    "baseline_rmse": 3.162,
-    "mae_improvement_percent": -228.45,
-    "rmse_improvement_percent": -221.53
+    "model_mae": 21.611,
+    "model_rmse": 27.442,
+    "baseline_mae": 19.651,
+    "baseline_rmse": 26.2,
+    "mae_improvement_percent": -9.97,
+    "rmse_improvement_percent": -4.74
   }
 }

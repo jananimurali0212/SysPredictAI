@@ -6,6 +6,11 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 
+from app.schemas.ai import (
+    AIInsightQueryRequest,
+    AIInsightResponse,
+    AISummaryResponse,
+)
 from app.schemas.analytics import (
     AnomalyDetectionResponse,
     PredictiveRiskResponse,
@@ -19,6 +24,7 @@ from app.schemas.metrics import (
     SystemInfo,
     SystemMetricsSnapshot,
 )
+from app.services.ai_service import AIService, get_ai_service
 from app.services.monitoring_service import MonitoringService, get_monitoring_service
 from app.websocket.manager import ConnectionManager, get_connection_manager
 
@@ -161,6 +167,59 @@ async def get_system_risk(
 ) -> PredictiveRiskResponse:
     """Evaluate comprehensive operational risk from current metrics, trends, forecasts, and anomalies."""
     return service.get_risk_assessment()
+
+
+# ============================================================================
+# Day 3: Gemini-Powered AI Insights & System Diagnostics Endpoints
+# ============================================================================
+
+
+@router.post(
+    "/insights/query",
+    response_model=AIInsightResponse,
+    tags=["AI Insights"],
+    summary="Ask Gemini AI about system performance",
+)
+async def query_ai_insights(
+    payload: AIInsightQueryRequest,
+    monitoring_service: MonitoringService = Depends(get_monitoring_service),
+    ai_service: AIService = Depends(get_ai_service),
+) -> AIInsightResponse:
+    """Analyze host telemetry and answer user questions using Gemini or telemetry heuristics."""
+    current_metrics = monitoring_service.get_current_metrics()
+    procs = monitoring_service.get_processes(limit=6, sort_by="cpu").processes
+    anoms = monitoring_service.get_anomalies().anomalies
+    risk_resp = monitoring_service.get_risk_assessment()
+    cpu_pred = monitoring_service.get_cpu_prediction(horizons_seconds=[60])
+    return await ai_service.answer_question(
+        question=payload.question,
+        current_metrics=current_metrics,
+        top_processes=procs,
+        anomalies=anoms,
+        risk_resp=risk_resp,
+        cpu_prediction=cpu_pred,
+    )
+
+
+@router.get(
+    "/insights/summary",
+    response_model=AISummaryResponse,
+    tags=["AI Insights"],
+    summary="Executive AI system health summary",
+)
+async def get_ai_summary(
+    monitoring_service: MonitoringService = Depends(get_monitoring_service),
+    ai_service: AIService = Depends(get_ai_service),
+) -> AISummaryResponse:
+    """Generate high-level synthesized system status statement for the Overview dashboard."""
+    current_metrics = monitoring_service.get_current_metrics()
+    anoms = monitoring_service.get_anomalies().anomalies
+    risk_resp = monitoring_service.get_risk_assessment()
+    return ai_service.generate_system_summary(
+        current_metrics=current_metrics,
+        anomalies=anoms,
+        risk_resp=risk_resp,
+    )
 
 
 @ws_router.websocket("/ws/metrics")

@@ -23,6 +23,11 @@ from .analytics import (
     RiskBreakdown,
     PredictiveRiskResponse,
 )
+from .ai import (
+    AIInsightQueryRequest,
+    AIInsightResponse,
+    AISummaryResponse,
+)
 
 __all__ = [
     "CPUFrequency",
@@ -45,5 +50,8 @@ __all__ = [
     "AnomalyDetectionResponse",
     "RiskBreakdown",
     "PredictiveRiskResponse",
+    "AIInsightQueryRequest",
+    "AIInsightResponse",
+    "AISummaryResponse",
 ]
 

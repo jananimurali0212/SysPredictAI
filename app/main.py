@@ -6,12 +6,14 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router as api_router, ws_router
 from app.config import settings
 from app.services.monitoring_service import get_monitoring_service
 
 STATIC_DASHBOARD_FILE = Path(__file__).resolve().parent / "static" / "dashboard.html"
+FRONTEND_DIST_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 
 def setup_logging() -> None:
@@ -60,10 +62,17 @@ app.add_middleware(
 app.include_router(api_router)
 app.include_router(ws_router)
 
+# Mount React static assets if built
+if (FRONTEND_DIST_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST_DIR / "assets"), name="assets")
+
 
 @app.get("/dashboard", response_class=HTMLResponse, summary="Interactive Real-Time Dashboard")
 async def dashboard():
-    """Serve the real-time visual system monitoring dashboard."""
+    """Serve the real-time visual system monitoring dashboard (Day 3 React or Day 1 fallback)."""
+    dist_index = FRONTEND_DIST_DIR / "index.html"
+    if dist_index.exists():
+        return HTMLResponse(content=dist_index.read_text(encoding="utf-8"))
     if STATIC_DASHBOARD_FILE.exists():
         return HTMLResponse(content=STATIC_DASHBOARD_FILE.read_text(encoding="utf-8"))
     return HTMLResponse("<h2>Dashboard file not found</h2>", status_code=404)
@@ -73,8 +82,12 @@ async def dashboard():
 async def root(request: Request):
     """Serve dashboard to browsers, or JSON API directory to programmatic clients."""
     accept_header = request.headers.get("accept", "")
-    if "text/html" in accept_header and STATIC_DASHBOARD_FILE.exists():
-        return HTMLResponse(content=STATIC_DASHBOARD_FILE.read_text(encoding="utf-8"))
+    dist_index = FRONTEND_DIST_DIR / "index.html"
+    if "text/html" in accept_header:
+        if dist_index.exists():
+            return HTMLResponse(content=dist_index.read_text(encoding="utf-8"))
+        if STATIC_DASHBOARD_FILE.exists():
+            return HTMLResponse(content=STATIC_DASHBOARD_FILE.read_text(encoding="utf-8"))
 
     return JSONResponse(
         content={
@@ -94,6 +107,8 @@ async def root(request: Request):
                 "predict_summary": "/api/predictions/summary",
                 "anomalies": "/api/anomalies",
                 "risk": "/api/risk",
+                "ai_insights_query": "/api/insights/query",
+                "ai_insights_summary": "/api/insights/summary",
             },
         }
     )

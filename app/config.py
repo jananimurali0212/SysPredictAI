@@ -1,6 +1,7 @@
 """Configuration settings for the System Monitoring Platform."""
 import os
 from pathlib import Path
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,6 +44,10 @@ class Settings(BaseSettings):
     ANOMALY_NET_SPEED_SPIKE_BPS: float = 50_000_000.0  # 50 MB/s
     ISOLATION_FOREST_CONTAMINATION: float = 0.05
     ISOLATION_FOREST_MIN_SAMPLES: int = 40
+
+    # Gemini AI Insights
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-1.5-flash"
 
     model_config = SettingsConfigDict(
         env_file=".env",

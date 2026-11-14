@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "model_type": "RandomForestRegressor",
+    "trained_at": "2026-11-14T11:03:43.438298Z",
+    "training_samples": 399,
+    "test_samples": 100,
+    "features_used": [
+      "cpu_percent",
+      "memory_percent",
+      "cpu_lag_1",
+      "cpu_lag_2",
+      "cpu_lag_3",
+      "cpu_lag_5",
+      "memory_lag_1",
+      "memory_lag_2",
+      "memory_lag_3",
+      "memory_lag_5",
+      "cpu_roll_mean_1m",
+      "cpu_roll_mean_5m",
+      "cpu_roll_mean_15m",
+      "memory_roll_mean_1m",
+      "memory_roll_mean_5m",
+      "memory_roll_mean_15m",
+      "cpu_roll_std_5m",
+      "memory_roll_std_5m",
+      "cpu_trend",
+      "memory_trend"
+    ],
+    "parameters": {
+      "n_estimators": "50",
+      "max_depth": "6",
+      "min_samples_split": "4",
+      "min_samples_leaf": "2"
+    }
+  },
+  "evaluation": {
+    "model_mae": 0.392,
+    "model_rmse": 0.586,
+    "baseline_mae": 0.481,
+    "baseline_rmse": 0.647,
+    "mae_improvement_percent": 18.44,
+    "rmse_improvement_percent": 9.48
+  }
+}
